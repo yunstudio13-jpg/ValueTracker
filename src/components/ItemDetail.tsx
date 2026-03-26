@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Item, ItemStatus } from '../types';
 import { calculateDailyCost, formatCurrency, getDaysUsed } from '../utils/calculations';
-import { db, updateDoc, doc, deleteDoc, handleFirestoreError, OperationType } from '../firebase';
-import { deleteField } from 'firebase/firestore';
+import { supabase } from '../lib/supabaseClient';
 import { X, Calendar, DollarSign, Clock, Tag, Edit2, Trash2, ArrowRight, TrendingDown } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format, parseISO, subDays, addDays } from 'date-fns';
@@ -35,11 +34,16 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
 
   const handleDelete = async () => {
     try {
-      await deleteDoc(doc(db, 'items', item.id));
+      const { error } = await supabase
+        .from('items')
+        .delete()
+        .eq('id', item.id);
+      if (error) throw error;
       onUpdate();
       onClose();
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `items/${item.id}`);
+      console.error('Error deleting item:', error);
+      alert('删除失败，请稍后重试');
     }
   };
 
@@ -58,15 +62,20 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
         payload.end_date = new Date().toISOString();
         payload.resale_value = 0;
       } else {
-        payload.end_date = deleteField();
+        payload.end_date = null;
         payload.resale_value = 0;
       }
 
-      await updateDoc(doc(db, 'items', item.id), payload);
+      const { error } = await supabase
+        .from('items')
+        .update(payload)
+        .eq('id', item.id);
+      if (error) throw error;
       setShowStatusModal(false);
       onUpdate();
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `items/${item.id}`);
+      console.error('Error updating item status:', error);
+      alert('状态更新失败，请稍后重试');
     }
   };
 
