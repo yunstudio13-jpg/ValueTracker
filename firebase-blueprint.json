@@ -1,0 +1,49 @@
+{
+  "entities": {
+    "Item": {
+      "title": "Item",
+      "description": "A personal asset or item being tracked.",
+      "type": "object",
+      "properties": {
+        "item_id": { "type": "string", "description": "Unique ID" },
+        "user_id": { "type": "string", "description": "Owner's UID" },
+        "name": { "type": "string", "description": "Item name" },
+        "price": { "type": "number", "description": "Purchase price" },
+        "purchase_date": { "type": "string", "format": "date-time", "description": "ISO 8601 purchase date" },
+        "category_id": { "type": "string", "description": "Category ID" },
+        "category_name": { "type": "string", "description": "Category name" },
+        "emoji": { "type": "string", "description": "Category emoji" },
+        "status": { "type": "string", "enum": ["active", "idle", "resold", "scrapped"], "description": "Current status" },
+        "resale_value": { "type": "number", "description": "Resale or recovery value" },
+        "end_date": { "type": "string", "format": "date-time", "description": "ISO 8601 end of use date" },
+        "cover_image": { "type": "string", "description": "Image URL" },
+        "brand": { "type": "string", "description": "Brand name" },
+        "warranty_expiry": { "type": "string", "format": "date-time", "description": "Warranty expiry date" },
+        "notes": { "type": "string", "description": "Additional notes" }
+      },
+      "required": ["item_id", "user_id", "name", "price", "purchase_date", "status"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Item category.",
+      "type": "object",
+      "properties": {
+        "category_id": { "type": "string", "description": "Unique ID" },
+        "user_id": { "type": "string", "description": "Owner's UID (0 for default)" },
+        "name": { "type": "string", "description": "Category name" },
+        "icon": { "type": "string", "description": "Lucide icon name" }
+      },
+      "required": ["category_id", "user_id", "name"]
+    }
+  },
+  "firestore": {
+    "/items/{itemId}": {
+      "schema": "Item",
+      "description": "User items"
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "User or system categories"
+    }
+  }
+}

@@ -1,0 +1,123 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: items
+    // Document ID: itemId
+    // Fields:
+    //   - item_id: string (required)
+    //   - user_id: string (required)
+    //   - name: string (required, 1-100 chars)
+    //   - price: number (required, >= 0)
+    //   - purchase_date: string (required, ISO 8601)
+    //   - category_id: string (optional)
+    //   - status: string (required, enum: active, idle, resold, scrapped)
+    //   - resale_value: number (optional, >= 0)
+    //   - end_date: string (optional, ISO 8601)
+    //   - cover_image: string (optional, URL)
+    //   - brand: string (optional)
+    //   - warranty_expiry: string (optional, ISO 8601)
+    //   - notes: string (optional)
+    //
+    // Collection: categories
+    // Document ID: categoryId
+    // Fields:
+    //   - category_id: string (required)
+    //   - user_id: string (required, 0 for system default)
+    //   - name: string (required, 1-50 chars)
+    //   - icon: string (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "yunstudio13@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string &&
+        dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function isValidUrl(url) {
+      return url is string &&
+        (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidItem(data) {
+      return hasOnlyAllowedFields(['item_id', 'user_id', 'name', 'price', 'purchase_date', 'category_id', 'category_name', 'emoji', 'status', 'resale_value', 'end_date', 'cover_image', 'brand', 'warranty_expiry', 'notes']) &&
+        data.item_id is string &&
+        data.user_id is string &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.price is number && data.price >= 0 &&
+        isValidDateString(data.purchase_date) &&
+        data.status in ['active', 'idle', 'resold', 'scrapped'] &&
+        (!('resale_value' in data) || (data.resale_value is number && data.resale_value >= 0)) &&
+        (!('end_date' in data) || isValidDateString(data.end_date)) &&
+        (!('cover_image' in data) || isValidUrl(data.cover_image)) &&
+        (!('category_name' in data) || data.category_name is string) &&
+        (!('emoji' in data) || data.emoji is string) &&
+        (!('warranty_expiry' in data) || isValidDateString(data.warranty_expiry));
+    }
+
+    function isValidCategory(data) {
+      return hasOnlyAllowedFields(['category_id', 'user_id', 'name', 'icon']) &&
+        data.category_id is string &&
+        data.user_id is string &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 50;
+    }
+
+    // ===============================================================
+    // Match Rules
+    // ===============================================================
+
+    match /items/{itemId} {
+      allow read: if isOwner(resource.data.user_id);
+      allow create: if isOwner(request.resource.data.user_id) && isValidItem(request.resource.data);
+      allow update: if isOwner(resource.data.user_id) && isOwner(request.resource.data.user_id) && isValidItem(request.resource.data);
+      allow delete: if isOwner(resource.data.user_id);
+    }
+
+    match /categories/{categoryId} {
+      // System categories (user_id == '0') are public read, user categories are owner read
+      allow read: if isAuthenticated() && (resource.data.user_id == '0' || isOwner(resource.data.user_id));
+      allow create: if isOwner(request.resource.data.user_id) && isValidCategory(request.resource.data);
+      allow update: if isOwner(resource.data.user_id) && isOwner(request.resource.data.user_id) && isValidCategory(request.resource.data);
+      allow delete: if isOwner(resource.data.user_id);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.role == 'user';
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
+    }
+    
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

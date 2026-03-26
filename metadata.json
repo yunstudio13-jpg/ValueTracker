@@ -1,0 +1,5 @@
+{
+  "name": "ValueTracker (物值)",
+  "description": "A personal asset and item lifecycle management app to track daily usage costs and promote rational consumption.",
+  "requestFramePermissions": []
+}
