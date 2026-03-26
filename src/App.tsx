@@ -23,9 +23,18 @@ export default function App() {
 
   // 监听用户认证状态
   useEffect(() => {
-    const { data: { session } } = supabase.auth.getSession();
-    setUser(session?.user || null);
-    setLoading(false);
+    const checkSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setUser(data?.session?.user || null);
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);

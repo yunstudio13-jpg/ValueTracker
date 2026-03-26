@@ -36,29 +36,29 @@ export function ItemForm({ item, onClose, onSuccess }: ItemFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return;
-    setLoading(true);
-
-    const payload: any = {
-      user_id: session.user.id,
-      name: formData.name,
-      price: parseFloat(formData.price) || 0,
-      purchase_date: new Date(formData.purchase_date).toISOString(),
-      brand: formData.brand,
-      status: formData.status,
-      notes: formData.notes,
-      cover_image: formData.cover_image || `https://picsum.photos/seed/${formData.name}/800/600`,
-      category_id: formData.category_id,
-      category_name: CATEGORIES.find(c => c.id === formData.category_id)?.name || '',
-      emoji: formData.emoji,
-    };
-
-    if (formData.warranty_expiry) {
-      payload.warranty_expiry = new Date(formData.warranty_expiry).toISOString();
-    }
-
     try {
+      const { data } = await supabase.auth.getSession();
+      if (!data?.session?.user) return;
+      setLoading(true);
+
+      const payload: any = {
+        user_id: data.session.user.id,
+        name: formData.name,
+        price: parseFloat(formData.price) || 0,
+        purchase_date: new Date(formData.purchase_date).toISOString(),
+        brand: formData.brand,
+        status: formData.status,
+        notes: formData.notes,
+        cover_image: formData.cover_image || `https://picsum.photos/seed/${formData.name}/800/600`,
+        category_id: formData.category_id,
+        category_name: CATEGORIES.find(c => c.id === formData.category_id)?.name || '',
+        emoji: formData.emoji,
+      };
+
+      if (formData.warranty_expiry) {
+        payload.warranty_expiry = new Date(formData.warranty_expiry).toISOString();
+      }
+
       if (item) {
         // Update existing item
         const { error } = await supabase
