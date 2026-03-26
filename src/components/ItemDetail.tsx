@@ -82,7 +82,7 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
         className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 flex flex-col max-h-[90vh]"
       >
         {/* Header Image */}
-        <div className="relative h-64 flex-shrink-0">
+        <div className="relative h-48 sm:h-64 flex-shrink-0">
           <img 
             src={item.cover_image || `https://picsum.photos/seed/${item.name}/800/600`} 
             alt={item.name}
@@ -108,9 +108,9 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 sm:space-y-8">
           {/* Main Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <StatCard 
               label="日均成本" 
               value={formatCurrency(dailyCost)} 
@@ -159,7 +159,7 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
           </section>
 
           {/* Details */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
             <section className="space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">基本信息</h3>
               <DetailRow icon={<Tag size={14} />} label="分类" value={item.category_name || '未分类'} />
@@ -175,16 +175,16 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 flex gap-3">
+        <div className="p-4 sm:p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3">
           <button 
             onClick={() => onEdit(item)}
-            className="flex-1 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+            className="flex-1 min-w-[120px] py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
           >
             <Edit2 size={16} /> 编辑
           </button>
           <button 
             onClick={() => setShowStatusModal(true)}
-            className="flex-1 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium flex items-center justify-center gap-2 transition-transform active:scale-95"
+            className="flex-[2] min-w-[160px] py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium flex items-center justify-center gap-2 transition-transform active:scale-95"
           >
             <ArrowRight size={16} /> 变更状态
           </button>
@@ -272,12 +272,14 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
 
 function StatCard({ label, value, subValue, icon }: { label: string, value: string, subValue: string, icon: React.ReactNode }) {
   return (
-    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
-      <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 sm:p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex sm:block items-center justify-between sm:justify-start gap-4 sm:gap-0">
+      <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0 sm:mb-1">
         {icon} {label}
       </div>
-      <div className="text-lg font-mono font-bold">{value}</div>
-      <div className="text-[10px] text-gray-400 mt-0.5">{subValue}</div>
+      <div className="flex flex-col items-end sm:items-start">
+        <div className="text-base sm:text-lg font-mono font-bold leading-tight">{value}</div>
+        <div className="text-[10px] text-gray-400 mt-0.5">{subValue}</div>
+      </div>
     </div>
   );
 }

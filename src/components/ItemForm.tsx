@@ -115,7 +115,7 @@ export function ItemForm({ item, onClose, onSuccess }: ItemFormProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Price */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
@@ -147,7 +147,7 @@ export function ItemForm({ item, onClose, onSuccess }: ItemFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Category */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">
@@ -184,7 +184,7 @@ export function ItemForm({ item, onClose, onSuccess }: ItemFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Brand */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2">

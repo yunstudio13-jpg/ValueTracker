@@ -41,21 +41,21 @@ export function Dashboard({ items, onItemClick }: DashboardProps) {
   return (
     <div className="space-y-8">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800"
+          className="bg-white dark:bg-gray-900 p-3 sm:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800"
         >
-          <div className="flex items-center gap-3 text-gray-400 mb-2">
-            <Package size={18} />
-            <span className="text-sm font-medium uppercase tracking-wider">总资产规模</span>
+          <div className="flex items-center gap-2 sm:gap-3 text-gray-400 mb-1 sm:mb-2">
+            <Package size={16} className="sm:w-[18px] sm:h-[18px]" />
+            <span className="text-[10px] sm:text-sm font-medium uppercase tracking-wider truncate">总资产规模</span>
           </div>
-          <div className="text-3xl font-light tracking-tight">
+          <div className="text-lg sm:text-3xl font-light tracking-tight truncate">
             {formatCurrency(stats.totalValue)}
           </div>
-          <div className="text-xs text-gray-500 mt-1">
-            共 {stats.totalItems} 件在用物品
+          <div className="text-[9px] sm:text-xs text-gray-500 mt-1 truncate">
+            共 {stats.totalItems} 件物品
           </div>
         </motion.div>
 
@@ -63,17 +63,17 @@ export function Dashboard({ items, onItemClick }: DashboardProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800"
+          className="bg-white dark:bg-gray-900 p-3 sm:p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800"
         >
-          <div className="flex items-center gap-3 text-gray-400 mb-2">
-            <DollarSign size={18} />
-            <span className="text-sm font-medium uppercase tracking-wider">全局日均成本</span>
+          <div className="flex items-center gap-2 sm:gap-3 text-gray-400 mb-1 sm:mb-2">
+            <DollarSign size={16} className="sm:w-[18px] sm:h-[18px]" />
+            <span className="text-[10px] sm:text-sm font-medium uppercase tracking-wider truncate">全局日均成本</span>
           </div>
-          <div className="text-3xl font-light tracking-tight">
+          <div className="text-lg sm:text-3xl font-light tracking-tight truncate">
             {formatCurrency(stats.globalDailyCost)}
           </div>
-          <div className="text-xs text-gray-500 mt-1">
-            所有在用物品每日消耗
+          <div className="text-[9px] sm:text-xs text-gray-500 mt-1 truncate">
+            每日消耗
           </div>
         </motion.div>
       </div>
