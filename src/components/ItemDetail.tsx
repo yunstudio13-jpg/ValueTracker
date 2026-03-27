@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Item, ItemStatus } from '../types';
-import { calculateDailyCost, formatCurrency, getDaysUsed } from '../utils/calculations';
+import { calculateDailyCost, formatCurrency, getDaysUsed, getWarrantyStatus } from '../utils/calculations';
 import { supabase } from '../lib/supabaseClient';
-import { X, Calendar, DollarSign, Clock, Tag, Edit2, Trash2, ArrowRight, TrendingDown } from 'lucide-react';
+import { X, Calendar, DollarSign, Clock, Tag, Edit2, Trash2, ArrowRight, TrendingDown, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format, parseISO, subDays, addDays } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -174,6 +174,13 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">基本信息</h3>
               <DetailRow icon={<Tag size={14} />} label="分类" value={CATEGORIES.find(c => c.id === item.category_id)?.name || '未分类'} />
               <DetailRow icon={<Calendar size={14} />} label="保修至" value={item.warranty_expiry ? format(parseISO(item.warranty_expiry), 'yyyy-MM-dd') : '未记录'} />
+              {item.warranty_expiry && item.purchase_date && (
+                <DetailRow 
+                  icon={<ShieldCheck size={14} />} 
+                  label="保修状态" 
+                  value={getWarrantyStatus(item)}
+                />
+              )}
             </section>
             <section className="space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">备注</h3>
