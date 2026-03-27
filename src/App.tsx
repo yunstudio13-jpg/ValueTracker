@@ -36,12 +36,12 @@ export default function App() {
 
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => data?.subscription?.unsubscribe();
   }, []);
 
   // 获取用户物品数据
@@ -68,14 +68,14 @@ export default function App() {
     fetchItems();
 
     // 设置实时订阅
-    const { data: { subscription } } = supabase
+    const { data } = supabase
       .from('items')
       .on('*', (payload) => {
         fetchItems();
       })
       .subscribe();
 
-    return () => subscription.unsubscribe();
+    return () => data?.subscription?.unsubscribe();
   }, [user]);
 
   const handleLogin = async () => {
