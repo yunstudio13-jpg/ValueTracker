@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Item, ItemStatus } from '../types';
 import { calculateDailyCost, formatCurrency, getDaysUsed } from '../utils/calculations';
-import { supabase } from '../lib/supabaseClient';
+import { db, updateDoc, doc, deleteDoc, handleFirestoreError, OperationType } from '../firebase';
+import { deleteField } from 'firebase/firestore';
 import { X, Calendar, DollarSign, Clock, Tag, Edit2, Trash2, ArrowRight, TrendingDown } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format, parseISO, subDays, addDays } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { CATEGORIES } from '../constants';
 
 interface ItemDetailProps {
   item: Item;
@@ -35,16 +35,11 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
 
   const handleDelete = async () => {
     try {
-      const { error } = await supabase
-        .from('items')
-        .delete()
-        .eq('id', item.id);
-      if (error) throw error;
+      await deleteDoc(doc(db, 'items', item.id));
       onUpdate();
       onClose();
     } catch (error) {
-      console.error('Error deleting item:', error);
-      alert('删除失败，请稍后重试');
+      handleFirestoreError(error, OperationType.DELETE, `items/${item.id}`);
     }
   };
 
@@ -63,20 +58,15 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
         payload.end_date = new Date().toISOString();
         payload.resale_value = 0;
       } else {
-        payload.end_date = null;
+        payload.end_date = deleteField();
         payload.resale_value = 0;
       }
 
-      const { error } = await supabase
-        .from('items')
-        .update(payload)
-        .eq('id', item.id);
-      if (error) throw error;
+      await updateDoc(doc(db, 'items', item.id), payload);
       setShowStatusModal(false);
       onUpdate();
     } catch (error) {
-      console.error('Error updating item status:', error);
-      alert('状态更新失败，请稍后重试');
+      handleFirestoreError(error, OperationType.UPDATE, `items/${item.id}`);
     }
   };
 
@@ -172,7 +162,7 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
             <section className="space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">基本信息</h3>
-              <DetailRow icon={<Tag size={14} />} label="分类" value={CATEGORIES.find(c => c.id === item.category_id)?.name || '未分类'} />
+              <DetailRow icon={<Tag size={14} />} label="分类" value={item.category_name || '未分类'} />
               <DetailRow icon={<Calendar size={14} />} label="保修至" value={item.warranty_expiry ? format(parseISO(item.warranty_expiry), 'yyyy-MM-dd') : '未记录'} />
             </section>
             <section className="space-y-3">

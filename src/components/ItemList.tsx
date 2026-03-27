@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Item, ItemStatus } from '../types';
-import { calculateDailyCost, formatCurrency } from '../utils/calculations';
-import { Search, Filter, ArrowUpDown, MoreVertical } from 'lucide-react';
+import { calculateDailyCost, formatCurrency, getDaysUsed, getWarrantyStatus } from '../utils/calculations';
+import { Search, Filter, ArrowUpDown, MoreVertical, Calendar, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion } from 'motion/react';
 
@@ -94,43 +94,60 @@ export function ItemList({ items, onItemClick }: ItemListProps) {
 
       {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {filteredItems.map((item, idx) => (
-          <motion.div 
-            key={item.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: idx * 0.03 }}
-            onClick={() => onItemClick(item)}
-            className="bg-white dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 hover:border-black dark:hover:border-white transition-all cursor-pointer group relative overflow-hidden"
-          >
-            <div className="flex gap-4">
-              <div className="w-20 h-20 rounded-2xl bg-gray-50 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative group">
-                <img 
-                  src={item.cover_image || `https://picsum.photos/seed/${item.name}/200/200`} 
-                  alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute top-1 left-1 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-lg p-1 text-sm shadow-sm">
-                  {item.emoji || '📦'}
-                </div>
-              </div>
-              <div className="flex-1 min-w-0 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-semibold text-sm truncate">{item.name}</h3>
-                  <p className="text-xs text-gray-400 truncate">{item.brand || '未知品牌'}</p>
-                </div>
-                <div className="flex items-end justify-between">
-                  <div className="text-xs font-mono font-medium">
-                    {formatCurrency(calculateDailyCost(item))}
-                    <span className="text-[10px] text-gray-400 ml-0.5">/日</span>
+        {filteredItems.map((item, idx) => {
+          const daysUsed = getDaysUsed(item);
+          const warrantyStatus = getWarrantyStatus(item);
+          
+          return (
+            <motion.div 
+              key={item.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.03 }}
+              onClick={() => onItemClick(item)}
+              className="bg-white dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 hover:border-black dark:hover:border-white transition-all cursor-pointer group relative overflow-hidden"
+            >
+              <div className="flex gap-4">
+                <div className="w-20 h-20 rounded-2xl bg-gray-50 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative group">
+                  <img 
+                    src={item.cover_image || `https://picsum.photos/seed/${item.name}/200/200`} 
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute top-1 left-1 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-lg p-1 text-sm shadow-sm">
+                    {item.emoji || '📦'}
                   </div>
-                  <StatusBadge status={item.status} />
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-semibold text-sm truncate">{item.name}</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5 overflow-hidden">
+                      <span className="text-[10px] text-gray-400 truncate max-w-[60px] shrink-0">{item.brand || '未知品牌'}</span>
+                      <span className="text-[10px] text-gray-500 flex items-center gap-0.5 shrink-0">
+                        <Calendar size={10} /> {daysUsed}天
+                      </span>
+                      {item.warranty_expiry && (
+                        <span className={`text-[10px] flex items-center gap-0.5 shrink-0 ${
+                          warrantyStatus === '已过保' ? 'text-red-500' : 'text-blue-500'
+                        }`}>
+                          <Shield size={10} /> {warrantyStatus}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-end justify-between mt-2">
+                    <div className="text-xs font-mono font-medium">
+                      {formatCurrency(calculateDailyCost(item))}
+                      <span className="text-[10px] text-gray-400 ml-0.5">/日</span>
+                    </div>
+                    <StatusBadge status={item.status} />
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
 
       {filteredItems.length === 0 && (

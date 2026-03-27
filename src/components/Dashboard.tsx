@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Item } from '../types';
-import { calculateDailyCost, formatCurrency } from '../utils/calculations';
-import { TrendingDown, TrendingUp, Package, DollarSign } from 'lucide-react';
+import { calculateDailyCost, formatCurrency, getDaysUsed, getWarrantyStatus } from '../utils/calculations';
+import { TrendingDown, TrendingUp, Package, DollarSign, Calendar, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface DashboardProps {
@@ -113,6 +113,9 @@ export function Dashboard({ items, onItemClick }: DashboardProps) {
 }
 
 function ItemRow({ item, index, onClick }: { item: Item & { dailyCost: number }, index: number, onClick: () => void }) {
+  const daysUsed = getDaysUsed(item);
+  const warrantyStatus = getWarrantyStatus(item);
+
   return (
     <motion.div 
       initial={{ opacity: 0, x: -20 }}
@@ -121,16 +124,28 @@ function ItemRow({ item, index, onClick }: { item: Item & { dailyCost: number },
       onClick={onClick}
       className="group flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-black dark:hover:border-white transition-all cursor-pointer"
     >
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center text-xl shadow-sm">
+      <div className="flex items-center gap-4 min-w-0">
+        <div className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center text-xl shadow-sm shrink-0">
           {item.emoji || '📦'}
         </div>
-        <div>
-          <h3 className="font-medium text-sm">{item.name}</h3>
-          <p className="text-xs text-gray-500">{item.brand || '未知品牌'}</p>
+        <div className="min-w-0">
+          <h3 className="font-medium text-sm truncate">{item.name}</h3>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[10px] text-gray-400 truncate">{item.brand || '未知品牌'}</span>
+            <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 dark:bg-gray-800 rounded text-gray-500 flex items-center gap-1 shrink-0">
+              <Calendar size={10} /> {daysUsed}天
+            </span>
+            {item.warranty_expiry && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0 ${
+                warrantyStatus === '已过保' ? 'bg-red-50 text-red-500 dark:bg-red-900/20' : 'bg-blue-50 text-blue-500 dark:bg-blue-900/20'
+              }`}>
+                <Shield size={10} /> {warrantyStatus}
+              </span>
+            )}
+          </div>
         </div>
       </div>
-      <div className="text-right">
+      <div className="text-right shrink-0">
         <div className="text-sm font-mono font-medium">
           {formatCurrency(item.dailyCost)}
           <span className="text-[10px] text-gray-400 ml-1">/日</span>
