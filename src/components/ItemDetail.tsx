@@ -6,6 +6,7 @@ import { X, Calendar, DollarSign, Clock, Tag, Edit2, Trash2, ArrowRight, Trendin
 import { motion } from 'motion/react';
 import { format, parseISO, subDays, addDays } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { CATEGORIES } from '../constants';
 
 interface ItemDetailProps {
   item: Item;
@@ -171,7 +172,7 @@ export function ItemDetail({ item, onClose, onEdit, onUpdate }: ItemDetailProps)
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
             <section className="space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">基本信息</h3>
-              <DetailRow icon={<Tag size={14} />} label="分类" value={item.category_name || '未分类'} />
+              <DetailRow icon={<Tag size={14} />} label="分类" value={CATEGORIES.find(c => c.id === item.category_id)?.name || '未分类'} />
               <DetailRow icon={<Calendar size={14} />} label="保修至" value={item.warranty_expiry ? format(parseISO(item.warranty_expiry), 'yyyy-MM-dd') : '未记录'} />
             </section>
             <section className="space-y-3">

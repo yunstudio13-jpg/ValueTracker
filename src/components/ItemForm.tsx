@@ -51,7 +51,6 @@ export function ItemForm({ item, onClose, onSuccess }: ItemFormProps) {
         notes: formData.notes,
         cover_image: formData.cover_image || `https://picsum.photos/seed/${formData.name}/800/600`,
         category_id: formData.category_id,
-        category_name: CATEGORIES.find(c => c.id === formData.category_id)?.name || '',
         emoji: formData.emoji,
       };
 
