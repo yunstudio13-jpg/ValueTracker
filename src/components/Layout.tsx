@@ -1,6 +1,5 @@
 import React from 'react';
-import { auth, logout } from '../firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { supabase } from '../lib/supabaseClient';
 import { LogOut, Plus, Home, List, User } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -12,7 +11,12 @@ interface LayoutProps {
 }
 
 export function Layout({ children, activeTab, onTabChange, onAddItem }: LayoutProps) {
-  const [user] = useAuthState(auth);
+  // 从 App 组件传递用户状态，或者使用 Supabase 的会话检查
+  // 这里简化处理，因为用户状态已经在 App 组件中管理
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#0A0A0A] text-[#1A1A1A] dark:text-[#F5F5F5] font-sans">
@@ -26,22 +30,15 @@ export function Layout({ children, activeTab, onTabChange, onAddItem }: LayoutPr
             <h1 className="text-xl font-semibold tracking-tight">ValueTracker</h1>
           </div>
           
-          {user && (
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={onAddItem}
-                className="p-2 bg-black dark:bg-white text-white dark:text-black rounded-full transition-transform active:scale-90"
-              >
-                <Plus size={20} />
-              </button>
-              <button 
-                onClick={logout}
-                className="p-2 text-gray-500 hover:text-red-500 transition-colors"
-              >
-                <LogOut size={20} />
-              </button>
-            </div>
-          )}
+          {/* 总是显示添加按钮，因为只有登录用户才能看到布局 */}
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={onAddItem}
+              className="p-2 bg-black dark:bg-white text-white dark:text-black rounded-full transition-transform active:scale-90"
+            >
+              <Plus size={20} />
+            </button>
+          </div>
         </div>
       </header>
 

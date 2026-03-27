@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db, collection, query, where, onSnapshot, loginWithGoogle, handleFirestoreError, OperationType } from './firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { supabase } from './lib/supabaseClient';
 import { Item } from './types';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
@@ -9,10 +8,11 @@ import { ItemForm } from './components/ItemForm';
 import { ItemDetail } from './components/ItemDetail';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { motion, AnimatePresence } from 'motion/react';
-import { LogIn, ShieldCheck, Sparkles } from 'lucide-react';
+import { LogIn, ShieldCheck, Sparkles, LogOut } from 'lucide-react';
 
 export default function App() {
-  const [user, loading, error] = useAuthState(auth);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [items, setItems] = useState<Item[]>([]);
@@ -21,24 +21,61 @@ export default function App() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
 
+  // 监听用户认证状态
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setUser(data?.session?.user || null);
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+      setLoading(false);
+    });
+
+    return () => data?.subscription?.unsubscribe();
+  }, []);
+
+  // 获取用户物品数据
   useEffect(() => {
     if (!user) {
       setItems([]);
       return;
     }
 
-    const q = query(collection(db, 'items'), where('user_id', '==', user.uid));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const itemsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Item[];
-      setItems(itemsData);
-    }, (err) => {
-      handleFirestoreError(err, OperationType.LIST, 'items');
-    });
+    const fetchItems = async () => {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('purchase_date', { ascending: false });
 
-    return () => unsubscribe();
+      if (error) {
+        console.error('Error fetching items:', error);
+      } else {
+        setItems(data || []);
+      }
+    };
+
+    fetchItems();
+
+    // 设置实时订阅
+    const channel = supabase
+      .channel('public-items-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, (payload) => {
+        fetchItems();
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, [user]);
 
   const handleLogin = async () => {
@@ -46,19 +83,27 @@ export default function App() {
     setLoginLoading(true);
     setLoginError(null);
     try {
-      await loginWithGoogle();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
     } catch (err: any) {
       console.error("Login error:", err);
-      if (err.code === 'auth/popup-blocked') {
+      if (err.message.includes('popup')) {
         setLoginError('登录窗口被浏览器拦截，请允许本站弹出窗口。');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        // Ignore cancelled requests as they usually happen on double click
       } else {
         setLoginError('登录失败，请稍后重试。');
       }
     } finally {
       setLoginLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   if (loading) {
@@ -166,12 +211,18 @@ export default function App() {
             >
               <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-gray-800 text-center space-y-4">
                 <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full mx-auto overflow-hidden">
-                  <img src={user.photoURL || ''} alt={user.displayName || ''} className="w-full h-full object-cover" />
+                  <img src={user?.user_metadata?.avatar_url || ''} alt={user?.user_metadata?.full_name || ''} className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold">{user.displayName}</h2>
-                  <p className="text-sm text-gray-500">{user.email}</p>
+                  <h2 className="text-xl font-bold">{user?.user_metadata?.full_name || user?.email}</h2>
+                  <p className="text-sm text-gray-500">{user?.email}</p>
                 </div>
+                <button 
+                  onClick={handleLogout}
+                  className="w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-2xl font-medium flex items-center justify-center gap-2 transition-transform active:scale-95"
+                >
+                  <LogOut size={18} /> 退出登录
+                </button>
               </div>
               
               <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden">

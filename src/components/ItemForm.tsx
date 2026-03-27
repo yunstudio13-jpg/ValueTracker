@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Item, ItemStatus } from '../types';
-import { auth, db, addDoc, collection, updateDoc, doc, handleFirestoreError, OperationType } from '../firebase';
-import { deleteField } from 'firebase/firestore';
+import { supabase } from '../lib/supabaseClient';
 import { X, Camera, Calendar, Tag, DollarSign, Package, Smile } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
@@ -37,44 +36,46 @@ export function ItemForm({ item, onClose, onSuccess }: ItemFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser) return;
-    setLoading(true);
-
-    const payload: any = {
-      user_id: auth.currentUser.uid,
-      name: formData.name,
-      price: parseFloat(formData.price) || 0,
-      purchase_date: new Date(formData.purchase_date).toISOString(),
-      brand: formData.brand,
-      status: formData.status,
-      notes: formData.notes,
-      cover_image: formData.cover_image || `https://picsum.photos/seed/${formData.name}/800/600`,
-      category_id: formData.category_id,
-      category_name: CATEGORIES.find(c => c.id === formData.category_id)?.name || '',
-      emoji: formData.emoji,
-    };
-
-    if (formData.warranty_expiry) {
-      payload.warranty_expiry = new Date(formData.warranty_expiry).toISOString();
-    }
-
     try {
+      const { data } = await supabase.auth.getSession();
+      if (!data?.session?.user) return;
+      setLoading(true);
+
+      const payload: any = {
+        user_id: data.session.user.id,
+        name: formData.name,
+        price: parseFloat(formData.price) || 0,
+        purchase_date: new Date(formData.purchase_date).toISOString(),
+        brand: formData.brand,
+        status: formData.status,
+        notes: formData.notes,
+        cover_image: formData.cover_image || `https://picsum.photos/seed/${formData.name}/800/600`,
+        category_id: formData.category_id,
+        emoji: formData.emoji,
+      };
+
+      if (formData.warranty_expiry) {
+        payload.warranty_expiry = new Date(formData.warranty_expiry).toISOString();
+      }
+
       if (item) {
-        // For update, we might want to delete the field if it's cleared
-        if (!formData.warranty_expiry) {
-          payload.warranty_expiry = deleteField();
-        }
-        await updateDoc(doc(db, 'items', item.id), payload);
+        // Update existing item
+        const { error } = await supabase
+          .from('items')
+          .update(payload)
+          .eq('id', item.id);
+        if (error) throw error;
       } else {
-        const docRef = await addDoc(collection(db, 'items'), {
-          ...payload,
-          item_id: '', // Will be updated with doc ID
-        });
-        await updateDoc(docRef, { item_id: docRef.id });
+        // Create new item
+        const { error } = await supabase
+          .from('items')
+          .insert(payload);
+        if (error) throw error;
       }
       onSuccess();
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, item ? `items/${item.id}` : 'items');
+      console.error('Error saving item:', error);
+      alert('保存失败，请稍后重试');
     } finally {
       setLoading(false);
     }
