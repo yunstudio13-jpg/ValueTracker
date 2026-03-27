@@ -22,13 +22,13 @@ export function getDaysUsed(item: Item): number {
 export function getWarrantyStatus(item: Item): '已过保' | '在保中' | '无保修' {
   if (!item.warranty_expiry || !item.purchase_date) return '无保修';
   
-  const purchaseDate = parseISO(item.purchase_date);
   const warrantyDate = parseISO(item.warranty_expiry);
+  const currentDate = new Date();
   
-  // Formula: Warranty Expiry - Purchase Date
-  const diff = differenceInDays(startOfDay(warrantyDate), startOfDay(purchaseDate));
+  // Formula: Current Date - Warranty Expiry Date
+  const diff = differenceInDays(startOfDay(currentDate), startOfDay(warrantyDate));
   
-  return diff < 0 ? '已过保' : '在保中';
+  return diff < 0 ? '在保中' : '已过保';
 }
 
 export function formatCurrency(value: number): string {
