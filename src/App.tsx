@@ -68,14 +68,14 @@ export default function App() {
     fetchItems();
 
     // 设置实时订阅
-    const { data } = supabase
-      .from('items')
-      .on('*', (payload) => {
+    const channel = supabase
+      .channel('public-items-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, (payload) => {
         fetchItems();
       })
       .subscribe();
 
-    return () => data?.subscription?.unsubscribe();
+    return () => supabase.removeChannel(channel);
   }, [user]);
 
   const handleLogin = async () => {
